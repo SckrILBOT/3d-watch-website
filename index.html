@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CHRONOS // CALIBRE-01 — Анатомия часового механизма</title>
+  <meta name="description" content="Премиальная интерактивная 3D-презентация механического калибра CHRONOS CALIBRE-01" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231a1715'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23c9a227' stroke-width='1.5'/%3E%3Cpath d='M16 8v8l5 3' fill='none' stroke='%23c9a227' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="vendor/fonts/local-fonts.css" />
+  <link rel="stylesheet" href="css/styles.css?v=23" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.js",
+      "three/addons/": "./vendor/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- LOADER -->
+  <div id="loader" class="loader">
+    <div class="loader-inner">
+      <div class="loader-brand">CHRONOS</div>
+      <div class="loader-sub">CALIBRE-01</div>
+      <div class="loader-bar">
+        <div class="loader-bar-fill" id="loader-fill"></div>
+      </div>
+      <div class="loader-pct" id="loader-pct">0%</div>
+      <div class="loader-msg">Синхронизация калибра…</div>
+      <!-- shown once the model is ready: browsers start audio only after a click, so the way in
+           doubles as the sound choice -->
+      <div class="loader-enter" id="loader-enter" hidden>
+        <button type="button" class="enter-btn enter-btn--main" id="enter-sound">Смотреть со звуком</button>
+        <button type="button" class="enter-btn" id="enter-mute">Без звука</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIXED 3D CANVAS -->
+  <canvas id="webgl"></canvas>
+
+  <!-- TOP NAV -->
+  <header class="top-nav">
+    <div class="brand">
+      <span class="brand-mark">C</span>
+      <span class="brand-text">CHRONOS</span>
+    </div>
+    <div class="nav-meta">Calibre‑01, хронограф с автоподзаводом</div>
+  </header>
+
+  <!-- SCROLL CONTENT -->
+  <main id="scroll-root">
+    <!-- SECTION 1: HERO -->
+    <section class="panel panel-hero" data-section="0">
+      <div class="panel-content hero-content">
+        <h1 class="hero-title">Часы, которые <em>можно разобрать</em></h1>
+        <p class="hero-lead">
+          Хронограф CHRONOS Calibre‑01 с автоподзаводом: <b class="fig">28&nbsp;800</b> полуколебаний
+          в час, <b class="fig">72</b> часа хода, <b class="fig">29</b> рубиновых камней. Прокручивайте страницу,
+          и часы разберутся слой за слоем, от стекла до задней крышки.
+        </p>
+      </div>
+      <div class="scroll-hint" aria-hidden="true">
+        <div class="scroll-hint-line"></div>
+        <span class="hint-turn">Потяните часы, чтобы повернуть</span>
+        <span>Прокрутите, чтобы разобрать</span>
+      </div>
+    </section>
+
+    <!-- SECTION 2: SHELL -->
+    <section class="panel panel--right" data-section="1">
+      <div class="panel-content right">
+        <div class="section-num">01</div>
+        <h2 class="section-title">Корпус и стекло</h2>
+        <p class="section-body">
+          Стекло сверху, крышка снизу, между ними стальной корпус с безелем.
+          Стекло снимается первым, а через окно в крышке механизм видно
+          даже в собранных часах.
+        </p>
+        <ul class="spec-list">
+          <li><span>Стекло</span><span>Сапфир с просветлением</span></li>
+          <li><span>Корпус</span><span>Полированная сталь</span></li>
+          <li><span>Крышка</span><span>Титан, сапфировое окно</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ENERGY -->
+    <section class="panel panel--left" data-section="2">
+      <div class="panel-content left">
+        <div class="section-num">02</div>
+        <h2 class="section-title">Энергия и передача</h2>
+        <p class="section-body">
+          В барабане свёрнута заводная пружина, её хватает на 72 часа.
+          Каждое следующее колесо крутится быстрее, и медленный барабан
+          ведёт быструю секундную стрелку.
+        </p>
+        <ul class="spec-list">
+          <li><span>Запас хода</span><span>72 часа</span></li>
+          <li><span>Зацепления</span><span>72/10, 64/8, 60/8, 60/7</span></li>
+          <li><span>Колёса</span><span>Розовое золото</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- room for the slow fly-through the watch between cards 02 and 03 -->
+    <div class="fly-gap" aria-hidden="true"></div>
+
+    <!-- SECTION 4: HEART -->
+    <section class="panel panel--right" data-section="3">
+      <div class="panel-content right">
+        <div class="section-num">03</div>
+        <h2 class="section-title">Сердце калибра</h2>
+        <p class="section-body">
+          Баланс качается туда и обратно четыре раза в секунду. На каждом
+          качании вилка отпускает спусковое колесо на полшага, и энергия
+          уходит ровными порциями.
+        </p>
+        <ul class="spec-list">
+          <li><span>Частота</span><span>4 Гц, 28 800 пк/ч</span></li>
+          <li><span>Спусковое колесо</span><span>15 зубьев</span></li>
+          <li><span>Камни</span><span>29 рубинов</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 5: FINALE (free orbit stays on here) -->
+    <section class="panel panel--left panel-inspector" data-section="4">
+      <div class="panel-content left inspector-copy">
+        <div class="section-num">04</div>
+        <h2 class="section-title">Калибр в&nbsp;ваших руках</h2>
+        <!-- the calibre's data sheet, the way a movement is specified -->
+        <dl class="passport">
+          <div><dt>Частота</dt><dd>28&nbsp;800 полуколебаний в час</dd></div>
+          <div><dt>Запас хода</dt><dd>72 часа</dd></div>
+          <div><dt>Камни</dt><dd>29 рубинов</dd></div>
+          <div><dt>Слои</dt><dd>10, от стекла до крышки</dd></div>
+        </dl>
+        <p class="finale-hint">Вращайте часы мышью. Чтобы рассмотреть деталь, откройте «Узлы» в панели снизу.</p>
+        <button type="button" class="finale-btn" id="btn-reassemble">Собрать часы</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- HOTSPOT CARDS -->
+  <div id="hotspot-card" class="hotspot-card" role="dialog" aria-modal="false" aria-labelledby="hotspot-title" hidden>
+    <button class="hotspot-close" id="hotspot-close" aria-label="Закрыть">×</button>
+    <div class="hotspot-kicker" id="hotspot-kicker">01</div>
+    <h3 class="hotspot-title" id="hotspot-title">Заводной барабан</h3>
+    <p class="hotspot-body" id="hotspot-body">Спиральная пружина удерживает запас хода 72 часа.</p>
+    <div class="hotspot-specs" id="hotspot-specs"></div>
+    <p class="hotspot-hint"><span class="hint-desktop">Колесо мыши приближает и отдаляет деталь, перетаскивание вращает её</span><span class="hint-touch">Двумя пальцами приближайте деталь, свайпом вращайте её</span></p>
+  </div>
+
+  <!-- Leave the part view (shown only while a part is focused) -->
+  <button type="button" class="part-exit" id="btn-part-exit" tabindex="-1">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Вернуться к часам</span>
+  </button>
+
+  <!-- HUD -->
+  <div class="hud" id="hud">
+    <!-- Parts popover: opens upward from the «Узлы» button -->
+    <div class="parts-pop" id="parts-pop" role="menu" aria-label="Узлы калибра" hidden>
+      <div class="parts-head">Узлы калибра</div>
+      <ul class="parts-list" id="parts-list"></ul>
+    </div>
+    <div class="hud-row">
+      <button class="hud-btn" id="btn-xray" type="button" aria-pressed="false" title="Режим рентгена">
+        <span class="hud-icon">◌</span>
+        <span>X-Ray</span>
+      </button>
+
+      <div class="hud-group">
+        <label class="hud-label" for="explode-range">Разборка</label>
+        <input type="range" id="explode-range" min="0" max="100" value="0" />
+        <span class="hud-val" id="explode-val">0%</span>
+      </div>
+
+      <div class="hud-group">
+        <span class="hud-label">Скорость</span>
+        <div class="hud-seg" id="speed-seg">
+          <button type="button" data-speed="0.2" aria-pressed="false">0.2×</button>
+          <button type="button" data-speed="1" class="active" aria-pressed="true">1×</button>
+          <button type="button" data-speed="10" aria-pressed="false">10×</button>
+        </div>
+        <button class="hud-btn hud-pause" id="btn-pause" type="button" aria-pressed="false" aria-label="Пауза" title="Пауза (P)"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1.5" width="2.6" height="9" rx="0.6"/><rect x="7.4" y="1.5" width="2.6" height="9" rx="0.6"/></svg></button>
+        <button class="hud-btn hud-pause hud-sound" id="btn-sound" type="button" aria-pressed="false" aria-label="Включить звук" title="Звук (M)"></button>
+      </div>
+
+      <button class="hud-btn" id="btn-parts" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="parts-pop" title="Узлы калибра">
+        <span class="hud-icon">◎</span>
+        <span id="btn-parts-label">Узлы</span>
+        <span class="hud-caret" aria-hidden="true">▴</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- GSAP UMD (global) -->
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script type="module" src="js/main.js?v=51"></script>
+</body>
+</html>

@@ -1,0 +1,939 @@
+/* =========================================================
+   CHRONOS // CALIBRE-01 — Dark Luxury UI
+   ========================================================= */
+
+/* Palette taken from the watch itself: black of the render, steel of the case, navy of the dial,
+   lume of the hands, and gold — the rose-gold wheels — as the one warm accent: titles, figures,
+   numbers and whatever is active. */
+:root {
+  --bg: #1a1715;        /* warm graphite: the scene background as it is actually rendered */
+  --bg-elev: #12141A;
+  --bg-elev-2: #1A1D25;
+  --ink: #ECE8E1;       /* dial printing, warm white */
+  --ink-muted: #8A8F98;
+  --ink-dim: #848995;
+  --ink-soft: #B4B7BE;
+  --steel: #A8B0B8;     /* case */
+  --navy: #1B2A4A;      /* dial */
+  --lume: #D9E4C8;      /* luminous paint on the hands: "you are here" */
+  --gold: #C9A227;      /* the warm accent (rose-gold wheels) */
+  --gold-soft: rgba(201, 162, 39, 0.16);
+  --rose: #C48A6A;
+  --ruby: #E60524;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --glass: rgba(24, 21, 19, 0.6);
+  --blur: blur(16px);
+  --font-display: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+  --font-ui: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+/* ========== LOADER ========== */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s var(--ease), visibility 0.8s;
+}
+.loader.is-done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.loader-inner {
+  text-align: center;
+  width: min(320px, 80vw);
+}
+.loader-brand {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.45em;
+  color: var(--steel);
+  margin-bottom: 8px;
+}
+.loader-sub {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  margin-bottom: 36px;
+}
+.loader-bar {
+  height: 1px;
+  background: var(--line-strong);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.loader-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--steel), var(--lume));
+  transition: width 0.25s ease;
+}
+.loader-pct {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+/* model ready: the progress gives way to the two ways in */
+.loader.is-ready .loader-bar,
+.loader.is-ready .loader-pct,
+.loader.is-ready .loader-msg { display: none; }
+.loader-enter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: pop-in 0.5s var(--ease);
+}
+.loader-enter[hidden] { display: none; }
+.enter-btn {
+  min-width: 240px;
+  height: 46px;
+  padding: 0 26px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, color 0.25s;
+}
+.enter-btn:hover { border-color: var(--ink-dim); color: var(--ink); }
+.enter-btn--main {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-soft);
+}
+.enter-btn--main:hover { background: rgba(201, 162, 39, 0.26); color: var(--gold); border-color: var(--gold); }
+.enter-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.loader-msg {
+  font-size: 12px;
+  color: var(--ink-dim);
+  letter-spacing: 0.08em;
+}
+
+/* ========== CANVAS ========== */
+#webgl {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+  outline: none;
+}
+
+/* ========== TOP NAV ========== */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 32px;
+  pointer-events: none;
+  /* soft fade so section titles don't run through the nav text while scrolling (L7) */
+  background: linear-gradient(to bottom, rgba(20, 17, 15, 0.9) 0%, rgba(20, 17, 15, 0.55) 60%, transparent 100%);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--gold);
+}
+/* the wordmark is the one place tracked capitals belong: it is the name on the dial */
+.brand-text {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.35em;
+  color: var(--ink);
+}
+.nav-meta {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+/* ========== SCROLL PANELS ========== */
+#scroll-root {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+.panel {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 12vh 6vw;
+  position: relative;
+}
+.panel-hero { min-height: 100vh; }
+/* the enter screen is up: the page waits at the top behind it */
+html.is-gated, html.is-gated body { overflow: hidden; }
+/* extra scroll for the fly-through between cards 02 and 03 (camera keys follow the sections) */
+.fly-gap { height: 120vh; }
+.panel-inspector { min-height: 110vh; }
+
+/* Copy sits straight on the page, like the hero: no boxes. The words do not animate in;
+   the only motion is the camera and the watch coming apart. */
+.panel-content {
+  position: relative;
+  max-width: 440px;
+  pointer-events: auto;
+}
+
+/* A soft shade on the side the copy sits on keeps it readable over the render.
+   A deeper graphite than --bg, so the copy reads; the mask fades the shade's ends. */
+.panel-hero::before,
+.panel--left::before,
+.panel--right::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  transition: opacity 0.6s var(--ease);
+}
+.panel-hero::before,
+.panel--left::before {
+  background: linear-gradient(90deg, rgba(15, 13, 11, 0.85) 0%, rgba(15, 13, 11, 0.55) 32%, rgba(15, 13, 11, 0) 58%);
+}
+.panel--right::before {
+  background: linear-gradient(270deg, rgba(15, 13, 11, 0.85) 0%, rgba(15, 13, 11, 0.55) 32%, rgba(15, 13, 11, 0) 58%);
+}
+/* the hero shade starts at the very top (nothing above it to fade into) */
+.panel-hero::before {
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+}
+.panel-content.hero-content { max-width: 620px; }
+.panel-content.right {
+  margin-left: auto;
+  margin-right: 2vw;
+}
+.panel-content.left {
+  margin-right: auto;
+  margin-left: 2vw;
+}
+.panel-content.center {
+  margin: 0 auto;
+  text-align: center;
+  max-width: 560px;
+}
+/* Finale copy: left column (alternating rhythm); bottom strip leaves the center free */
+.panel-inspector .panel-content.left.inspector-copy {
+  margin-right: auto;
+  margin-bottom: 180px;
+  text-align: left;
+  max-width: 420px;
+}
+.panel-inspector .section-title { margin-bottom: 20px; }
+
+/* ---- Type: Cormorant for titles and figures, Space Grotesk for interface, Inter for copy.
+   Scale steps ≈ 1.25: 12 · 15 · 17 · 34–50 · 56–96. Labels are sentence case, never caps. ---- */
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(56px, 6vw, 96px);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  /* two even lines at this width — no single word picked out */
+  max-width: 15ch;
+  margin-bottom: 32px;
+  text-wrap: balance;
+}
+.hero-title em {
+  display: block;
+  font-style: italic;
+  color: var(--gold);
+}
+/* figures in the lead: same text, picked out in the accent */
+.hero-lead .fig {
+  font-weight: 400;
+  color: var(--gold);
+}
+.hero-lead {
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: 34em;
+}
+
+/* the step number: it is a sequence (the order the watch comes apart), so it stays */
+.section-num {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--gold);
+  font-variant-numeric: lining-nums;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 3.4vw, 50px);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  margin-bottom: 18px;
+  text-wrap: balance;
+}
+.section-body {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  margin-bottom: 28px;
+}
+
+.spec-list {
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.spec-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.spec-list li span:first-child { color: var(--ink-dim); }
+.spec-list li span:last-child {
+  color: var(--ink);
+  text-align: right;
+}
+
+/* Model failed to load: explain it, hide the controls that cannot work */
+.model-banner {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 12px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: rgba(40, 14, 18, 0.9);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+body.model-failed .hud { display: none; }
+
+/* Visible keyboard focus (the range input has outline:none) */
+#explode-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.6); }
+#explode-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.6); }
+.hud-btn:focus-visible, .hud-seg button:focus-visible, .parts-list button:focus-visible,
+.finale-btn:focus-visible, .hotspot-close:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Finale card (steps aside while a part is focused) */
+/* any section copy (the hero too: its opacity is inline, hence !important) */
+body.part-focus .panel-content {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+body.part-focus .panel::before { opacity: 0; }
+
+/* Finale: the calibre's data sheet — label left, value right, figures in the display face */
+.passport {
+  margin: 0 0 24px;
+  border-top: 1px solid var(--line-strong);
+}
+.passport div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.passport dt {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+.passport dd {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--gold);
+  text-align: right;
+  font-variant-numeric: lining-nums;
+}
+.finale-hint {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  margin-bottom: 18px;
+}
+.finale-btn {
+  display: inline-block;
+  padding: 12px 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--gold);
+  background: rgba(24, 21, 19, 0.6);
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, color 0.25s;
+}
+.finale-btn:hover {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+}
+
+/* scroll cue: a still line, no pulsing (the only motion on the page is the watch) */
+.scroll-hint {
+  position: absolute;
+  /* above the HUD (its bar is 24px off the bottom, its height comes from JS) */
+  bottom: calc(var(--hud-h, 64px) + 24px + 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink-dim);
+  white-space: nowrap;
+  transition: opacity 0.6s var(--ease);
+}
+/* the drag hint bows out after the first turn; «Прокрутите» stays until the page moves */
+.hint-turn {
+  color: var(--ink-soft);
+  transition: opacity 0.5s var(--ease);
+}
+body.turned .hint-turn { opacity: 0; }
+@media (hover: none) and (pointer: coarse) {
+  .hint-turn { display: none; }
+}
+.scroll-hint-line {
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(to bottom, var(--gold), transparent);
+}
+
+
+
+/* ========== PARTS POPOVER (opens upward from the HUD «Узлы» button) ========== */
+.parts-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  width: min(280px, calc(100vw - 32px));
+  padding: 12px;
+  pointer-events: auto;
+  background: rgba(30, 27, 24, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  animation: pop-in 0.25s var(--ease);
+}
+.parts-pop[hidden] { display: none; }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.parts-head {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin: 2px 4px 10px;
+}
+.parts-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+.parts-list li { min-width: 0; }
+.parts-list button {
+  width: 100%;
+  height: 42px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 0 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.parts-list button span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.parts-list button:hover {
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.07);
+}
+.parts-list button.is-active {
+  border-color: var(--gold);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+.parts-list .num {
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--gold);
+  flex: 0 0 auto;
+  font-variant-numeric: lining-nums;
+}
+@media (max-width: 520px) {
+  .parts-list button { height: 38px; font-size: 11px; padding: 0 8px; }
+}
+
+/* ========== PART CARD ========== */
+.hotspot-card {
+  position: fixed;
+  right: 28px;
+  top: 44%; /* a bit above centre so the «Узлы» menu does not cover its last row (L5) */
+  transform: translateY(-50%) translateX(12px);
+  z-index: 25;
+  width: min(340px, calc(100vw - 40px));
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  padding: 28px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+.hotspot-card.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+.hotspot-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+.hotspot-close:hover { color: var(--ink); }
+.hotspot-kicker {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--gold);
+  font-variant-numeric: lining-nums;
+  margin-bottom: 10px;
+}
+.hotspot-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.hotspot-body {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-muted);
+  margin-bottom: 18px;
+}
+.hotspot-specs {
+  display: grid;
+  gap: 8px;
+}
+.hotspot-specs .row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  gap: 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.hotspot-specs .row span:first-child { color: var(--ink-dim); }
+.hotspot-specs .row span:last-child { color: var(--ink); }
+
+.hotspot-hint {
+  margin-top: 16px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+.hint-touch { display: none; }
+@media (hover: none) and (pointer: coarse) {
+  .hint-desktop { display: none; }
+  .hint-touch { display: inline; }
+}
+
+/* «Вернуться к часам»: appears with a focused part, sits above the HUD */
+.part-exit {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--hud-h, 64px) + 24px + 16px);
+  z-index: 31;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 22px 0 16px;
+  border: 1px solid rgba(201, 162, 39, 0.55);
+  border-radius: 999px;
+  background: rgba(24, 21, 19, 0.85);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 10px);
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease), visibility 0.4s,
+    background 0.25s, border-color 0.25s;
+}
+.part-exit svg { width: 14px; height: 14px; display: block; }
+.part-exit:hover { background: var(--gold-soft); border-color: var(--gold); }
+.part-exit:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+body.part-focus .part-exit {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+/* the cue goes as soon as the page moves (it used to ride up with the hero), and while a part is open */
+body.has-scrolled .scroll-hint,
+body.part-focus .scroll-hint { opacity: 0; }
+
+/* ========== HUD ========== */
+.hud {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  margin: 0 auto;
+  z-index: 30;
+  width: fit-content; /* hug the controls so the popover lines up with «Узлы» */
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+}
+.hud-row {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 12px 14px;
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+.hud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, color 0.25s;
+  white-space: nowrap;
+}
+.hud-btn:hover {
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.07);
+}
+.hud-btn.is-active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-soft);
+}
+.hud-icon {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--gold);
+}
+.hud-btn.is-active .hud-icon { color: var(--gold); }
+/* all HUD controls share one height so the row lines up */
+.hud-btn, .hud-seg { height: 38px; }
+.hud-pause {
+  width: 38px;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+}
+.hud-pause svg { display: block; width: 12px; height: 12px; fill: currentColor; }
+/* sound: a speaker, with waves when on and a cross when off */
+.hud-sound svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4;
+  stroke-linecap: round; stroke-linejoin: round; }
+.hud-sound svg .body { fill: currentColor; stroke: none; }
+.hud-sound:not(.is-active) { color: var(--ink-dim); }
+.hud-caret {
+  font-size: 9px;
+  color: var(--ink-dim);
+  transition: transform 0.25s var(--ease);
+}
+/* fixed width: the label switches «Узлы» ↔ «Узел 0N» and must not move the whole HUD (L6) */
+#btn-parts { min-width: 124px; justify-content: center; }
+#btn-parts.is-open .hud-caret { transform: rotate(180deg); }
+#btn-parts.is-open { border-color: var(--line-strong); background: rgba(255, 255, 255, 0.07); }
+
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+.hud-label {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+.hud-val {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--gold);
+  min-width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#explode-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 2px;
+  background: var(--line-strong);
+  border-radius: 2px;
+  outline: none;
+}
+#explode-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
+}
+#explode-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 2px solid var(--bg);
+}
+
+.hud-seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.hud-seg button {
+  /* equal cells: «0.2×» must not be wider than «1×» */
+  width: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.hud-seg button:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.05);
+}
+.hud-seg button.active {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+/* ========== RESPONSIVE ========== */
+/* short desktop windows (1280x720, 1024x768): the finale copy must start below the top bar */
+@media (max-height: 820px) {
+  .panel-inspector .panel-content.left.inspector-copy { margin-bottom: 40px; }
+  .panel-inspector { padding-top: 96px; }
+}
+
+/* phone layout — the same rule as PORTRAIT_MQ in main.js (a portrait tablet included) */
+@media (max-width: 720px), (max-aspect-ratio: 85/100) {
+  .top-nav { padding: 16px 18px; }
+  /* leave room for the HUD (its height is measured in JS → --hud-h) so text is never under it */
+  .panel { padding: 10vh 6vw calc(var(--hud-h, 130px) + 48px); }
+  .panel-content.right,
+  .panel-content.left { margin: 0; }
+  .panel-inspector .panel-content.left.inspector-copy { margin-bottom: 0; }
+  /* phones: copy sits at the top of each screen over a shade that fades downwards,
+     the watch takes the lower half (frameYPortrait in main.js) */
+  .panel { align-items: flex-start; padding-top: 88px; }
+  .panel-hero::before,
+  .panel--left::before,
+  .panel--right::before {
+    background: linear-gradient(180deg, rgba(15, 13, 11, 0.88) 0%, rgba(15, 13, 11, 0.6) 40%, rgba(15, 13, 11, 0) 62%);
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .hero-title { font-size: clamp(44px, 12.5vw, 60px); max-width: 8ch; margin-bottom: 20px; }
+  .hero-lead { font-size: 15px; }
+  .section-title { font-size: 32px; }
+  .section-body { font-size: 14px; margin-bottom: 18px; }
+  .spec-list li { padding: 9px 0; }
+  .scroll-hint { display: none; } /* the watch sits right above the HUD on phones */
+  /* phones: the part card is at the bottom, so the exit goes under the top bar */
+  .part-exit { bottom: auto; top: 64px; }
+  /* finale on a phone: the data sheet stays, the long hint goes, rows tighten — the watch needs
+     the lower half of the screen (QA M3) */
+  .finale-hint { display: none; }
+  /* exactly one screen: at the bottom of the page the copy starts under the top bar, not behind it */
+  .panel-inspector { min-height: 100vh; }
+  .passport { margin-bottom: 18px; }
+  .passport div { padding: 8px 0; }
+  .passport dd { font-size: 17px; }
+  /* part card on a phone: title and one paragraph; the specs and gesture hint pushed the part
+     under the card (QA M3) */
+  .hotspot-specs,
+  .hotspot-hint { display: none; }
+  .hotspot-body { margin-bottom: 0; }
+  /* compact HUD, two rows: [X-Ray] [Узлы] [pause] / [slider]. Speed steps are desktop-only. */
+  .hud-row { gap: 8px; padding: 10px; }
+  .hud-row > .hud-btn { flex: 1 1 0; justify-content: center; padding: 10px 8px; }
+  #btn-xray { order: 1; }
+  #btn-parts { order: 2; }
+  .hud-row > .hud-group:nth-of-type(2) { order: 3; width: auto; padding: 0; }
+  .hud-row > .hud-group:nth-of-type(1) { order: 4; width: 100%; padding: 0 4px; }
+  .hud-label { display: none; }
+  #speed-seg { display: none; }
+  .hud-pause { min-width: 44px; height: 38px; }
+  #explode-range { flex: 1; width: auto; }
+  .parts-pop { right: 0; left: 0; width: auto; }
+  .hotspot-card {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    top: auto;
+    bottom: calc(var(--hud-h, 130px) + 36px);
+    max-height: calc(100vh - var(--hud-h, 130px) - 110px);
+    overflow-y: auto;
+    padding: 20px;
+    transform: translateY(12px);
+  }
+  .hotspot-card.is-open {
+    transform: translateY(0);
+  }
+  .nav-meta { display: none; }
+}
+
+/* subtle vignette for drama */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background:
+    radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  body::after { display: none; }
+}
