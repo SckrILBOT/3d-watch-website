@@ -1554,8 +1554,12 @@ canvas.addEventListener('pointermove', (e) => {
   heroTurn.y = e.clientY;
   const k = 0.006; // rad per pixel: a full turn is a long sweep, not a flick
   heroTurn.q.premultiply(_turnQ.setFromAxisAngle(UP, dx * k));
-  _turnAxis.setFromMatrixColumn(camera.matrixWorld, 0); // camera right: tip towards / away
-  heroTurn.q.premultiply(_turnQ.setFromAxisAngle(_turnAxis, dy * k)).normalize();
+  // the tip towards / away is held to ±50°: past that the turned watch swung over the hero copy (L5)
+  heroTurn.tilt = heroTurn.tilt || 0;
+  const tilt = Math.max(-0.87, Math.min(0.87, heroTurn.tilt + dy * k));
+  _turnAxis.setFromMatrixColumn(camera.matrixWorld, 0); // camera right
+  heroTurn.q.premultiply(_turnQ.setFromAxisAngle(_turnAxis, tilt - heroTurn.tilt)).normalize();
+  heroTurn.tilt = tilt;
 });
 const endTurn = (e) => {
   if (!heroTurn.dragging || e.pointerId !== heroTurn.id) return;
@@ -1902,6 +1906,7 @@ function tick() {
   if (!heroTurn.dragging && !canTurnHero()) {
     if (reduceMotion) heroTurn.q.identity();
     else heroTurn.q.slerp(_identityQ, 1 - Math.exp(-6 * dt));
+    heroTurn.tilt = 0;
   }
 
   // gentle idle float — tiny, so parts don't look "crooked" while spinning
